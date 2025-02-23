@@ -10,6 +10,7 @@ import UsernameContext from '../views/context/context';
 // const auth = false;
 
 // Authentication routes
+const LandingPage = Loadable(lazy(() => import('views/pages/authentication/authentication3/LadingPage')));
 const AuthLogin3 = Loadable(lazy(() => import('views/pages/authentication/authentication3/Login3')));
 const AuthRegister3 = Loadable(lazy(() => import('views/pages/authentication/authentication3/Register3')));
 
@@ -72,7 +73,7 @@ export default function ThemeRoutes() {
     children: [
       {
         path: '/',
-        element: <AuthLogin3 />
+        element: <LandingPage />
       },
       {
         path: '/pages/login/login3',

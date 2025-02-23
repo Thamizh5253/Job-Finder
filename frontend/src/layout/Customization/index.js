@@ -104,7 +104,7 @@ const Customization = () => {
             borderBottomLeftRadius: '50%',
             borderTopRightRadius: '50%',
             borderBottomRightRadius: '4px',
-            top: '25%',
+            top: '75%',
             position: 'fixed',
             right: 10,
             zIndex: theme.zIndex.speedDial

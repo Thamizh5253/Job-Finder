@@ -124,7 +124,7 @@ io.on("connection", (socket) => {
   // When a user sends a message
   socket.on("sendMessage", async (data) => {
     const { sender_mail, receiver_mail, message  ,url , isFile } = data;
-    console.log(data)
+    // console.log(data)
     try {
       const newMessage = new SocketMessage({ sender_mail, receiver_mail, message , url , isFile });
       await newMessage.save();
@@ -141,6 +141,24 @@ io.on("connection", (socket) => {
       console.error("Error saving message:", error);
     }
   });
+
+  socket.on("markMessagesAsRead", async ({ sender_mail, receiver_mail }) => {
+    try {
+      // Delete unread messages for the receiver
+      await UnreadMessage.deleteMany({ sender_mail, receiver_mail });
+  
+      // Fetch updated unread count
+      const unreadCount = await UnreadMessage.countDocuments({ receiver_mail });
+  
+      // Notify the receiver to update their unread count
+      if (onlineUsers[receiver_mail]) {
+        io.to(onlineUsers[receiver_mail]).emit("updateUnreadCount", { sender_mail, receiver_mail, unreadCount });
+      }
+    } catch (error) {
+      console.error("Error clearing unread messages:", error);
+    }
+  });
+  
 
   // When a user disconnects
   socket.on("disconnect", () => {

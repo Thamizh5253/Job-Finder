@@ -20,7 +20,8 @@ const ChatList = () => {
   const [imgUrl, setImgUrl] = useState('');
   const [isFile , setIsFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  
+  const [unreadMessages, setUnreadMessages] = useState({});
+
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -78,6 +79,13 @@ socket.on("update-online-users", (onlineUsers) => {
       ) {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
+      else {
+        // Increment unread count for the sender
+        setUnreadMessages((prevUnread) => ({
+          ...prevUnread,
+          [newMessage.sender_mail]: (prevUnread[newMessage.sender_mail] || 0) + 1
+        }));
+      }
     });
 
     // Clean up the socket listener
@@ -94,8 +102,23 @@ socket.on("update-online-users", (onlineUsers) => {
     setSelectedChat(otherUser);
     setOpen(true);
     
+    // Mark messages as read
+  setUnreadMessages((prevUnread) => ({
+    ...prevUnread,
+    [otherUser]: 0 // Reset count
+    
+  }));
+  // Emit an event to mark messages as read when opening the chat
+  socket.emit("markMessagesAsRead", {
+    sender_mail: otherUser,
+    receiver_mail: username,
+  });
     // scrollToBottom();
   };
+  function closeChatModal(){
+    setOpen(false)
+    setSelectedChat(null)
+  }
   const handleSendMessage = async () => {
 
     if (!newMessage.trim()) return;
@@ -188,14 +211,39 @@ socket.on("update-online-users", (onlineUsers) => {
         }}
       >
         <ListItemText primary={user} />
-        {onlineUsers.includes(user) && <Typography variant="body2" color="green">Online</Typography>}
+        
+        {onlineUsers.includes(user) && (
+  <Typography variant="body2" color="green" sx={{ marginRight: 1 }}>
+    Online
+  </Typography>
+)}
+{unreadMessages[user] > 0 && (
+  <Box 
+    sx={{
+      backgroundColor: 'red',
+      color: 'white',
+      borderRadius: '50%',
+      width: 20,
+      height: 20,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: 12,
+      marginLeft: 1  // Adds a small gap
+    }}
+  >
+    {unreadMessages[user]}
+  </Box>
+)}
+
+
       </ListItem>
     ))}
   </List>
 </Box>
 
 
-      <Modal open={open} onClose={() => setOpen(false)}>
+      <Modal open={open} onClose={closeChatModal }>
         <Box sx={{
           position: 'absolute',
           top: '50%',
@@ -234,7 +282,7 @@ socket.on("update-online-users", (onlineUsers) => {
   />
 </Box>
 
-            <Button onClick={() => setOpen(false)} sx={{ minWidth: '32px', fontSize: '18px', color: '#555' }}>✖</Button>
+            <Button onClick={closeChatModal} sx={{ minWidth: '32px', fontSize: '18px', color: '#555' }}>✖</Button>
           </Box>
 
           <Box sx={{
