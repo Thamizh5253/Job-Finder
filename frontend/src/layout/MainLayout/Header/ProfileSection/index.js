@@ -50,7 +50,7 @@ import UsernameContext from '../../../../views/context/context';
 const ProfileSection = () => {
   const navigate = useNavigate();
 
-  const { username, setProfile, profile, setAuth } = useContext(UsernameContext);
+  const { username, setProfile, profile, setAuth  } = useContext(UsernameContext);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -104,6 +104,7 @@ const ProfileSection = () => {
     //fetching data to Edit
     try {
       const response = await axios.get(`http://localhost:5001/api/fetchEditAccountInfo/${username}`);
+      // setName(response.date.fname);
       setFormData(response.data);
     } catch (err) {
       console.log(err);

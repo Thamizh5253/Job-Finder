@@ -38,6 +38,7 @@ const AddLandDetails = () => {
       const res = await axios.post('http://localhost:5001/api/img/upload/document', {
         image_url: docPreview
       });
+      console.log('res:', res);
       toast.success('Image Uploaded successfully', {
         position: 'top-right',
         autoClose: 5000,

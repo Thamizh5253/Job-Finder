@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext,useRef } from 'react';
 import axios from 'axios';
 import { Box, Modal, Button, Typography, List, ListItem, ListItemText, TextField } from '@mui/material';
 import UsernameContext from '../context/context';
 import { io } from 'socket.io-client';
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 
 // Initialize socket connection
 const socket = io('http://localhost:5001');
@@ -15,6 +16,12 @@ const ChatList = () => {
   const [open, setOpen] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const messagesEndRef = useRef(null);
+  const [imgUrl, setImgUrl] = useState('');
+  const [isFile , setIsFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  
+
   useEffect(() => {
     const fetchConversations = async () => {
       try {
@@ -36,6 +43,11 @@ const ChatList = () => {
   }, [username]);
 
   useEffect(() => {
+    scrollToBottom();
+  }, [  messages ]);
+  
+
+  useEffect(() => {
     const fetchMessages = async () => {
       try {
         const response = await axios.get('http://localhost:5001/api/getmessages', {
@@ -50,8 +62,7 @@ const ChatList = () => {
     if (selectedChat) {
       fetchMessages();
     }
-
-
+   
 socket.emit("user-online", username);
 
 socket.on("update-online-users", (onlineUsers) => {
@@ -75,9 +86,15 @@ socket.on("update-online-users", (onlineUsers) => {
     };
   }, [selectedChat, username]);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  
   const handleOpenChat = async (otherUser) => {
     setSelectedChat(otherUser);
     setOpen(true);
+    
+    // scrollToBottom();
   };
   const handleSendMessage = async () => {
 
@@ -87,6 +104,8 @@ socket.on("update-online-users", (onlineUsers) => {
       sender_mail: username,
       receiver_mail: selectedChat,
       message: newMessage,
+      url: imgUrl, // Add the URL of the file
+      isFile: isFile
     };
   
     try {
@@ -94,11 +113,52 @@ socket.on("update-online-users", (onlineUsers) => {
       setMessages((prevMessages) => [...prevMessages, messageData]);
      
       setNewMessage(""); // Clear input after sending
+      setIsFile(false);
+      setImgUrl('');
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
   
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert('Please select a file first.');
+      return;
+    }
+  
+    // Convert file to base64
+    const toBase64 = (file) => 
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+      });
+  
+    try {
+      const base64Image = await toBase64(selectedFile); // Convert to base64
+  
+      const response = await axios.post("http://localhost:5001/api/img/upload/document", {
+        image_url: base64Image,  // Send as 'image_url' field
+      });
+  
+      // alert("File uploaded successfully!");
+      setNewMessage(selectedFile.name);
+      setImgUrl(response.data.data);
+      setIsFile(true);
+      // handleSendMessage();
+      console.log("Upload Response:", response.data.data);
+  
+  
+      // Clear selected file after upload
+      setSelectedFile(null);
+      // setImgUrl('')
+  
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      // alert("Failed to upload file.");
+    }
+  };
   
 
   return (
@@ -202,27 +262,75 @@ socket.on("update-online-users", (onlineUsers) => {
                   boxShadow: 2,
                 }}
               >
-                <Typography variant="body1">{msg.message}</Typography>
+                {/* <Typography variant="body1">{msg.message}</Typography> */}
+                   {msg.isFile ? (
+                  <Box>
+                    <img 
+                      src={msg.url} 
+                      alt="Uploaded file" 
+                      style={{ maxWidth: '100%', height: 'auto' }} 
+                    />
+                    <Typography variant="body1">{msg.message}</Typography>
+                  </Box>
+                ) : (
+                  <Typography variant="body1">{msg.message}</Typography>
+                )}
               </Box>
             ))}
+              <div ref={messagesEndRef} />
+
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <Button size="large" variant="contained" onClick={handleSendMessage}>
-              Send
-            </Button>
-          </Box>
+          {/* Input and File Upload Section */}
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+      {/* File Upload Button */}
+      <input
+        type="file"
+        id="file-input"
+        style={{ display: 'none' }}
+        onChange={(e) => setSelectedFile(e.target.files[0])}
+      />
+      <label htmlFor="file-input">
+      <Button size="large" variant="contained" component="span">
+  <AddCircleOutlineIcon sx={{ mr: 1 }} /> File
+</Button>      </label>
+
+      {/* Message Input */}
+      <TextField
+        fullWidth
+        variant="outlined"
+        placeholder="Type a message..."
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+      />
+
+      {/* Send Message Button */}
+      <Button size="large" variant="contained" onClick={handleSendMessage}>
+        Send
+      </Button>
+    </Box>
+          {/* File Preview Section */}
+              {selectedFile && (
+                <Box sx={{
+                  mt: 2,
+                  p: 2,
+                  border: '1px solid #ccc',
+                  borderRadius: 2,
+                  backgroundColor: '#f5f5f5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <Typography variant="body1">{selectedFile.name}</Typography>
+                  <Button variant="contained" color="primary" onClick={handleUpload}>
+                    Upload
+                  </Button>
+                </Box>
+              )}
         </Box>
       </Modal>
     </Box>
   );
 };
 
-export default ChatList;
+export default ChatList; 

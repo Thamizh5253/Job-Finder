@@ -11,6 +11,9 @@ const http = require("http");
 const SocketMessage = require("./Schema/socketmessage");
 const AddLandDetails = require("./Schema/addland");
 const UserRegister = require("./Schema/register");
+const UnreadMessage = require('./Schema/unreadmessage'); // Import the UnreadMessage model
+
+
 
 require("dotenv").config();
 const app = express();
@@ -120,11 +123,15 @@ io.on("connection", (socket) => {
 
   // When a user sends a message
   socket.on("sendMessage", async (data) => {
-    const { sender_mail, receiver_mail, message } = data;
-
+    const { sender_mail, receiver_mail, message  ,url , isFile } = data;
+    console.log(data)
     try {
-      const newMessage = new SocketMessage({ sender_mail, receiver_mail, message });
+      const newMessage = new SocketMessage({ sender_mail, receiver_mail, message , url , isFile });
       await newMessage.save();
+
+      // Store unread message in unread_messages collection
+      const unreadMessage = new UnreadMessage({ receiver_mail,sender_mail , message_id: newMessage._id });
+      await unreadMessage.save();
 
       // Send the message only to the receiver if they are online
       if (onlineUsers[receiver_mail]) {
