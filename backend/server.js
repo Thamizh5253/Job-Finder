@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const db = require("./db");
 const http = require("http");
+const Razorpay = require('razorpay');
 
 const SocketMessage = require("./Schema/socketmessage");
 const AddLandDetails = require("./Schema/addland");
@@ -32,7 +33,10 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 
 const PORT = process.env.PORT || 5001;
-
+const razorpay = new Razorpay({
+  key_id: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
+  key_secret: 'YOUR_RAZORPAY_KEY_SECRET', // Replace with your Razorpay Key Secret
+})
 // Connect to the database
 db.connect();
 
@@ -424,7 +428,23 @@ app.get("/logout", (req, res) => {
 });
 
 
+app.post('/create-order', async (req, res) => {
+  const { amount } = req.body;
 
+  const options = {
+    amount: amount * 100, // Convert amount to paise (e.g., 500 INR = 50000 paise)
+    currency: 'INR',
+    receipt: 'order_receipt_11', // Replace with your order ID or receipt
+  };
+
+  try {
+    const response = await razorpay.orders.create(options);
+    res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create order' });
+  }
+});
 
 
 // Start the server

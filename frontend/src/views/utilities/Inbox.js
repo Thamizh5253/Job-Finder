@@ -4,7 +4,6 @@ import { Box, Modal, Button, Typography, List, ListItem, ListItemText, TextField
 import UsernameContext from '../context/context';
 import { io } from 'socket.io-client';
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-
 // Initialize socket connection
 const socket = io('http://localhost:5001');
 
