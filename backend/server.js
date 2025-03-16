@@ -378,7 +378,6 @@ app.get("/logout", (req, res) => {
   res.json({ message: "Logout successful" });
 });
 
-<<<<<<< HEAD
 // Create Job API
 app.post('/api/jobs', async (req, res) => {
   try {
