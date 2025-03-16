@@ -13,10 +13,10 @@ const NavGroup = ({ item }) => {
   const { role } = useContext(UsernameContext);
   // Filter menu items based on role
   const filteredItems = item.children?.filter((menu) => {
-    if (role === 'land-owner') {
-      return menu.id === 'Manage Booking' || menu.id === 'Booking History' || menu.id === 'manageservices' || menu.title === 'Dashboard';
-    } else if (role === 'advertiser') {
-      return menu.id === 'resultstable' || menu.id === 'util-shadow' || menu.title === 'Dashboard';
+    if (role === 'HR') {
+      return menu.id === 'New Job' || menu.id === 'HR Job Data' || menu.id === 'manageservices' || menu.title === 'Dashboard';
+    } else if (role === 'Candidate') {
+      return menu.id === 'Job Data' || menu.id === 'util-shadow' || menu.title === 'Dashboard';
     }
     return false;
   });

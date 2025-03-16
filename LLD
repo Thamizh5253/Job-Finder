@@ -1,0 +1,205 @@
+### Low-Level Design (LLD) for HR-Candidate Portal
+
+#### Tech Stack
+
+- **Frontend:** React
+- **Backend:** Node.js (Express)
+- **Database:** MongoDB
+
+---
+
+### User Roles
+
+1. **HR**
+2. **Candidate**
+
+---
+
+### User Authentication
+
+- **Login** (for both HR and Candidate)
+  - Email/Password Authentication
+  - Role-based access control
+  - JWT Tokens for session management
+
+---
+
+### HR Dashboard
+
+- **New Job Posting**
+
+  - Form: Job Title, Description, Requirements, Location, Salary
+  - Submit button to create job entry in MongoDB
+
+- **Posted Jobs View**
+
+  - List of all jobs posted by HR
+  - Each job item has a button to view applied candidates
+
+- **Candidate Details View**
+
+  - List of candidates who applied for the job
+  - Clicking on a candidate shows detailed info (Name, Email, Resume, Score, Assessment results)
+
+---
+
+### Candidate Dashboard
+
+- **User Profile**
+
+  - Basic details (Name, Email, Phone, Skills)
+  - Display user score (updated after assessments)
+
+- **Menu**
+
+  - **Assessment:**
+    - Start new assessment
+    - View past assessment scores
+  - **Community:**
+    - Join community (WebSockets or Firebase for real-time chat)
+    - Chat room feature (channels based on interests/jobs)
+  - **Job Search:**
+    - Search and filter jobs by location, skill, salary
+    - Apply for jobs
+
+- **Courses:**
+
+  - List of recommended courses (static data or fetched from an API)
+  - Mark course as completed
+
+---
+
+### Database Schema
+
+#### User Collection
+
+```json
+{
+  "name": "string",
+  "email": "string",
+  "password": "string",
+  "role": "HR/Candidate",
+  "score": "number",
+  "profile": {
+    "phone": "string",
+    "skills": ["string"]
+  }
+}
+```
+
+#### Job Collection
+
+```json
+{
+  "title": "string",
+  "description": "string",
+  "requirements": ["string"],
+  "location": "string",
+  "salary": "number",
+  "postedBy": "HR_ID",
+  "candidates": [
+    { "candidateId": "string", "score": "number" }
+  ]
+}
+```
+
+#### Assessment Collection
+
+```json
+{
+  "candidateId": "string",
+  "jobId": "string",
+  "score": "number",
+  "date": "timestamp"
+}
+```
+
+---
+
+### API Endpoints
+
+#### Auth Endpoints
+
+- POST /login
+- POST /register
+
+#### HR Endpoints
+
+- POST /jobs
+  - Creates a new job posting
+  - Expects JSON body with job details
+  - Example request:
+    ```json
+    {
+      "title": "Software Engineer",
+      "description": "Build and maintain web applications",
+      "requirements": ["JavaScript", "React", "Node.js"],
+      "location": "Remote",
+      "salary": 60000
+    }
+    ```
+  - Example response:
+    ```json
+    {
+      "message": "Job posted successfully",
+      "jobId": "12345"
+    }
+    ```
+- GET /jobs
+  - Retrieves all jobs posted by the logged-in HR
+- GET /jobs/:id/candidates
+  - Retrieves candidates who applied for a specific job
+
+#### Candidate Endpoints
+
+- GET /profile
+- PUT /profile
+- GET /jobs
+  - Retrieves all available jobs
+- POST /jobs/:id/apply
+  - Candidate applies to a job
+  - Example request:
+    ```json
+    {
+      "candidateId": "67890"
+    }
+    ```
+  - Example response:
+    ```json
+    {
+      "message": "Application submitted"
+    }
+    ```
+- POST /assessments/start
+  - Starts a new assessment
+- GET /assessments/results
+  - Fetches past assessment results
+- GET /community
+- POST /community/message
+
+---
+
+### Real-Time Chat (Community)
+
+- WebSockets (Socket.IO)
+- Room creation based on job roles/interests
+
+---
+
+### Error Handling
+
+- Proper status codes
+- Custom error messages for validation, authentication, and data retrieval issues
+
+---
+
+### Future Enhancements
+
+- Resume parsing for candidates
+- AI-based job recommendations
+- Video interview integration
+
+---
+
+Would you like to extend this with more detailed UI/UX flow, database indexing for performance, or API response examples?
+

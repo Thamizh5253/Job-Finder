@@ -35,35 +35,35 @@ const utilities = {
   type: 'group',
   children: [
     {
-      id: 'util-shadow',
-      title: 'Land Details',
+      id: 'New Job',
+      title: 'New Job',
       type: 'item',
-      url: '/utils/land-details',
+      url: '/utils/new-job',
       icon: icons.IconSquarePlus,
       breadcrumbs: false
     },
     {
-      id: 'resultstable',
-      title: 'Inbox',
+      id: 'Job Data',
+      title: 'Job Data',
       type: 'item',
-      url: '/utils/inbox',
+      url: '/utils/job-data',
       icon: icons.IconHistory,
       breadcrumbs: false
     },
     {
-      id: 'Manage Booking',
-      title: 'Add Land Details',
+      id: 'HR Job Data',
+      title: 'HR Job Data',
       icon: icons.IconBrandFeedly,
       type: 'item',
-      url: '/utils/addlanddetails',
+      url: '/utils/hr-job-data',
       breadcrumbs: false
     },
     
     {
       id: 'Booking History',
-      title: 'Inbox',
+      title: 'Inbox1',
       type: 'item',
-      url: '/utils/inbox',
+      url: '/utils/inbox1',
       icon: icons.IconHistory,
       breadcrumbs: false
     }

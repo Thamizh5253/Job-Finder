@@ -13,7 +13,8 @@ const SocketMessage = require("./Schema/socketmessage");
 const AddLandDetails = require("./Schema/addland");
 const UserRegister = require("./Schema/register");
 const UnreadMessage = require('./Schema/unreadmessage'); // Import the UnreadMessage model
-
+const userSchema = require('./Schema/user');
+const Jobs = require("./Schema/jobs");
 
 
 require("dotenv").config();
@@ -31,69 +32,19 @@ app.use(
 app.use(express.json({ limit: "20mb" }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use((req, res, next) => {
+  console.log(`Incoming Request: ${req.method} ${req.url}`);
+  console.log('Body:', req.body);
+  next();
+});
+
 
 const PORT = process.env.PORT || 5001;
-const razorpay = new Razorpay({
-  key_id: 'YOUR_RAZORPAY_KEY_ID', // Replace with your Razorpay Key ID
-  key_secret: 'YOUR_RAZORPAY_KEY_SECRET', // Replace with your Razorpay Key Secret
-})
+
 // Connect to the database
 db.connect();
 
-// Cloudinary file upload for document image
-app.post("/api/img/upload/document", async (req, res) => {
-  try {
-    const { image_url } = req.body;
-    if (!image_url) return res.status(400).json({ error: "Image URL required" });
 
-    const cloudinary_res = await cloudinary.uploader.upload(image_url, {
-      folder: "/spoton",
-      resource_type: "image",
-    });
-
-    res.status(200).json({
-      message: "Document image uploaded successfully",
-      data: cloudinary_res.secure_url,
-    });
-  } catch (err) {
-    console.error("Cloudinary Upload Error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Cloudinary file upload for land image
-app.post("/api/img/upload/land", async (req, res) => {
-  try {
-    const { image_url } = req.body;
-    if (!image_url) return res.status(400).json({ error: "Image URL required" });
-
-    const cloudinary_res = await cloudinary.uploader.upload(image_url, {
-      folder: "/spoton",
-      resource_type: "image",
-    });
-
-    res.status(200).json({
-      message: "Land image uploaded successfully",
-      data: cloudinary_res.secure_url,
-    });
-  } catch (err) {
-    console.error("Cloudinary Upload Error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST endpoint to add new land details
-app.post("/api/addLandDetails", async (req, res) => {
-  // console.log("Land details received:", req.body);
-  try {
-    const addLand = new AddLandDetails(req.body);
-    await addLand.save();
-    res.status(200).send("Land details received and saved successfully");
-  } catch (err) {
-    console.error("Error saving land details:", err);
-    res.status(500).send("Error saving land details");
-  }
-});
 
 // Route to fetch all land details
 app.get("/api/getlanddetails", async (req, res) => {
@@ -316,49 +267,50 @@ app.get("/api/fetchusername/:username", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 app.post("/api/register", async (req, res) => {
   try {
     // Extract form data from the request body
-    const { email, password, fname, lname, mobile, role } = req.body;
+    const { name, email, password, role, mobile, skills } = req.body;
 
     // Check if the email already exists in the database
-    const existingUser = await UserRegister.findOne({ email });
+    const existingUser = await userSchema.findOne({ email });
 
     if (existingUser) {
-      // If user already exists, respond with a message
       return res.status(400).json({ message: "User already exists" });
     }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Create a new user document with hashed password
-    const newUser = new UserRegister({
+
+    // Create a new user document with hashed password and profile data
+    const newUser = new userSchema({
+      name,
       email,
       password: hashedPassword,
-      fname,
-      lname,
-      mobile,
       role,
+      score: 0, // default score
+      profile: {
+        mobile,
+        skills: skills || [], // default to empty array if no skills provided
+      },
     });
 
     // Save the user document to the database
     await newUser.save();
 
-    // Respond with a success message
-    res.status(200).json({ message: "User registered successfully" });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    // Respond with an error message if something goes wrong
     console.error("Error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
+
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   // Find user by email
-  const user = await UserRegister.findOne({ email });
+  const user = await userSchema.findOne({ email });
 
   // If user not found, respond with error
   if (!user) {
@@ -427,24 +379,92 @@ app.get("/logout", (req, res) => {
   res.json({ message: "Logout successful" });
 });
 
-
-app.post('/create-order', async (req, res) => {
-  const { amount } = req.body;
-
-  const options = {
-    amount: amount * 100, // Convert amount to paise (e.g., 500 INR = 50000 paise)
-    currency: 'INR',
-    receipt: 'order_receipt_11', // Replace with your order ID or receipt
-  };
-
+// Create Job API
+app.post('/api/jobs', async (req, res) => {
   try {
-    const response = await razorpay.orders.create(options);
-    res.json(response);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to create order' });
+    // Transform requirements string into an array
+    if (req.body.requirements && typeof req.body.requirements === 'string') {
+      req.body.requirements = req.body.requirements.split('\n').map(line => line.trim()).filter(Boolean);
+    }
+    const newJob = new Jobs(req.body);
+    console.log(newJob);
+    const savedJob = await newJob.save();
+    res.status(201).json(savedJob);
+  } catch (err) {
+    console.log(err.message);
+
+    res.status(400).json({ error: err.message });
   }
 });
+
+app.get('/api/jobs', async (req, res) => {
+  console.log(req.query);
+  const { username } = req.query; // Get username from query params
+
+  try {
+    let query = {};
+
+    // If username is provided, filter jobs by postedBy
+    if (username) {
+      query.postedBy = username;
+    }
+
+    const jobs = await Jobs.find(query);
+    res.status(200).json(jobs);
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Apply for a job route
+app.post('/api/applyJob', async (req, res) => {
+  const { jobId, username } = req.body;
+
+  try {
+    const job = await Jobs.findById(jobId);
+
+    if (!job) return res.status(404).json({ message: 'Job not found' });
+
+    // Check if the user already applied
+    const alreadyApplied = job.candidates.find(c => c.candidateId === username);
+    if (alreadyApplied) return res.status(400).json({ message: 'You have already applied for this job' });
+
+    // Add candidate to the job
+    job.candidates.push({ candidateId: username, score: Math.floor(Math.random() * 100) });  // Example score
+    await job.save();
+
+    res.status(200).json({ message: 'Application submitted successfully' });
+  } catch (error) {
+    console.error('Error applying for job:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update Job API
+app.put('/api/jobs/:id', async (req, res) => {
+  try {
+    const updatedJob = await Jobs.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.status(200).json(updatedJob);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete Job API
+app.delete('/api/jobs/:id', async (req, res) => {
+  try {
+    await Jobs.findByIdAndDelete(req.params.id);
+    res.status(204).end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
 
 
 // Start the server

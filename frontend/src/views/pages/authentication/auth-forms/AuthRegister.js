@@ -20,7 +20,7 @@ import {
   MenuItem,
   TextField,
   Typography,
-  useMediaQuery
+  useMediaQuery,
 } from '@mui/material';
 
 // third party
@@ -39,18 +39,21 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const FirebaseRegister = ({ ...others }) => {
   const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Name is required'),
     email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
     password: Yup.string().max(255).required('Password is required'),
-    role: Yup.string().required('Role is required') // Added validation for the new field
+    role: Yup.string().required('Role is required'),
+    mobile: Yup.string().required('Mobile is required'),
+    skills: Yup.string().optional(), // Optional field
   });
 
   const initialValues = {
+    name: '',
     email: '',
-    fname: '',
-    lname: '',
     mobile: '',
     password: '',
-    role: '' // Default role
+    role: '', // Default role
+    skills: '', // Optional field
   };
 
   const theme = useTheme();
@@ -98,9 +101,12 @@ const FirebaseRegister = ({ ...others }) => {
               const response = await fetch('http://localhost:5001/api/register', {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(values) // Send email, password, and role in the request body
+                body: JSON.stringify({
+                  ...values,
+                  skills: values.skills ? values.skills.split(',') : [], // Convert skills string to array
+                }),
               });
               const data = await response.json();
 
@@ -113,11 +119,11 @@ const FirebaseRegister = ({ ...others }) => {
                   pauseOnHover: true,
                   draggable: true,
                   progress: undefined,
-                  theme: 'light'
+                  theme: 'light',
                 });
                 setValues(initialValues);
               } else if (data.message === 'User already exists') {
-                toast.warn('User Already Exist!', {
+                toast.warn('User Already Exists!', {
                   position: 'top-right',
                   autoClose: 5000,
                   hideProgressBar: false,
@@ -125,7 +131,7 @@ const FirebaseRegister = ({ ...others }) => {
                   pauseOnHover: true,
                   draggable: true,
                   progress: undefined,
-                  theme: 'light'
+                  theme: 'light',
                 });
               } else {
                 setErrors({ submit: data.message });
@@ -136,7 +142,7 @@ const FirebaseRegister = ({ ...others }) => {
             }
             setSubmitting(false);
           } else {
-            toast.warn('Please Agree Our Term & Condition!', {
+            toast.warn('Please Agree to Our Terms & Conditions!', {
               position: 'top-right',
               autoClose: 5000,
               hideProgressBar: false,
@@ -144,7 +150,7 @@ const FirebaseRegister = ({ ...others }) => {
               pauseOnHover: true,
               draggable: true,
               progress: undefined,
-              theme: 'light'
+              theme: 'light',
             });
           }
         }}
@@ -152,35 +158,22 @@ const FirebaseRegister = ({ ...others }) => {
         {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
           <form noValidate onSubmit={handleSubmit} {...others}>
             <Grid container spacing={matchDownSM ? 0 : 2}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="First Name"
+                  label="Full Name"
                   margin="normal"
-                  name="fname"
+                  name="name"
                   type="text"
-                  defaultValue=""
-                  value={values.fname}
+                  value={values.name}
                   onChange={handleChange}
-                  sx={{ ...theme.typography.customInput }}
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Last Name"
-                  margin="normal"
-                  name="lname"
-                  type="text"
-                  defaultValue=""
-                  value={values.lname}
-                  onChange={handleChange}
+                  error={Boolean(touched.name && errors.name)}
+                  helperText={touched.name && errors.name}
                   sx={{ ...theme.typography.customInput }}
                 />
               </Grid>
             </Grid>
-            
+
             <FormControl fullWidth error={Boolean(touched.email && errors.email)} sx={{ ...theme.typography.customInput }}>
               <InputLabel htmlFor="outlined-adornment-email-register">Email Address</InputLabel>
               <OutlinedInput
@@ -190,7 +183,7 @@ const FirebaseRegister = ({ ...others }) => {
                 name="email"
                 onBlur={handleBlur}
                 onChange={handleChange}
-                inputProps={{ defaultValue: '' }}
+                inputProps={{}}
               />
               {touched.email && errors.email && (
                 <FormHelperText error id="standard-weight-helper-text--register">
@@ -198,46 +191,59 @@ const FirebaseRegister = ({ ...others }) => {
                 </FormHelperText>
               )}
             </FormControl>
-            <Grid item xs={12} sm={12}>
+
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 label="Mobile Number"
                 margin="normal"
                 name="mobile"
                 type="text"
-                defaultValue=""
                 value={values.mobile}
+                onChange={handleChange}
+                error={Boolean(touched.mobile && errors.mobile)}
+                helperText={touched.mobile && errors.mobile}
+                sx={{ ...theme.typography.customInput }}
+              />
+            </Grid>
+
+            <FormControl fullWidth error={Boolean(touched.role && errors.role)}>
+              <InputLabel id="role-select-label">Role</InputLabel>
+              <Select
+                labelId="role-select-label"
+                id="role-select"
+                value={values.role}
+                name="role"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                label="Role"
+              >
+                <MenuItem value="" disabled>
+                  Select Role
+                </MenuItem>
+                <MenuItem value="HR">HR</MenuItem>
+                <MenuItem value="Candidate">Candidate</MenuItem>
+              </Select>
+              {touched.role && errors.role && (
+                <FormHelperText error id="role-helper-text">
+                  {errors.role}
+                </FormHelperText>
+              )}
+            </FormControl>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Skills (comma-separated)"
+                margin="normal"
+                name="skills"
+                type="text"
+                value={values.skills}
                 onChange={handleChange}
                 sx={{ ...theme.typography.customInput }}
               />
             </Grid>
 
-
-<FormControl fullWidth error={Boolean(touched.role && errors.role)}>
-  
-  <Select
-    labelId="role-select-label"
-    id="role-select"
-    value={values.role}
-    name="role"
-    onBlur={handleBlur}
-    onChange={handleChange}
-    displayEmpty
-  >
-    <MenuItem value="" disabled>
-      Select Role
-    </MenuItem>
-    <MenuItem value="land-owner">Land Owner</MenuItem>
-    <MenuItem value="advertiser">Advertiser</MenuItem>
-  </Select>
-  {touched.role && errors.role && (
-    <FormHelperText error id="role-helper-text">
-      {errors.role}
-    </FormHelperText>
-  )}
-</FormControl>
-
-           
             <FormControl fullWidth error={Boolean(touched.password && errors.password)} sx={{ ...theme.typography.customInput }}>
               <InputLabel htmlFor="outlined-adornment-password-register">Password</InputLabel>
               <OutlinedInput
@@ -300,7 +306,7 @@ const FirebaseRegister = ({ ...others }) => {
                     <Typography variant="subtitle1">
                       Agree with &nbsp;
                       <Typography variant="subtitle1" component={Link} to="#">
-                        Terms & Condition.
+                        Terms & Conditions.
                       </Typography>
                     </Typography>
                   }

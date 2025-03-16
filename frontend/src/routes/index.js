@@ -16,9 +16,11 @@ const AuthRegister3 = Loadable(lazy(() => import('views/pages/authentication/aut
 
 // Main routes
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')));
-const Inbox = Loadable(lazy(() => import('views/utilities/Inbox')));
-const LandDetails = Loadable(lazy(() => import('views/utilities/LandDetails')));
-const AddLandDetails = Loadable(lazy(() => import('views/utilities/AddLandDetails')));
+const New_Job = Loadable(lazy(() => import('views/utilities/NewJob')));
+// const LandDetails = Loadable(lazy(() => import('views/utilities/LandDetails')));
+// const AddLandDetails = Loadable(lazy(() => import('views/utilities/AddLandDetails')));
+const JobData = Loadable(lazy(() => import('views/utilities/JobData')));
+const HrJobData  = Loadable(lazy(() => import('views/utilities/HRJobData')));                                                                                                                                                                                  
 // const BookingHistory = Loadable(lazy(() => import('views/utilities/Inbox')));
 
 // Combine both authentication and main routes
@@ -48,17 +50,17 @@ export default function ThemeRoutes() {
         path: 'utils',
         children: [
           {
-            path: 'inbox',
-            element: <Inbox />
+            path: 'new-job',
+            element: <New_Job />
           },
           {
-            path: 'land-details',
-            element: <LandDetails />
+            path: 'job-data',
+            element: <JobData />
           },
           
           {
-            path: 'addlanddetails',
-            element: <AddLandDetails />
+            path: 'hr-job-data',
+            element: <HrJobData />
           }
         ]
       },
