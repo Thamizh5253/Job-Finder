@@ -98,9 +98,7 @@ const Customization = () => {
           size="medium"
           variant="circular"
           color="secondary"
-          
           sx={{
-            display: 'none',
             borderRadius: 0,
             borderTopLeftRadius: '50%',
             borderBottomLeftRadius: '50%',

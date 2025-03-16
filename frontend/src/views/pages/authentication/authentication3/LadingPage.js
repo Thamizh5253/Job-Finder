@@ -2,7 +2,7 @@ import React from 'react';
 import { AppBar, Toolbar, Button, Typography, Container, Grid, Card, CardContent, Box } from '@mui/material';
 import { Chat, LocationOn, AttachMoney, Login, HowToReg, ArrowForward } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import FAQChatbot from '../../../../layout/Customization/FAQ-Bot';
+import FAQChatbot from './FAQ-Bot';
 function LandingPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: '#F5F5F5' }}>

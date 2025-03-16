@@ -7,7 +7,6 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const db = require("./db");
 const http = require("http");
-const Razorpay = require('razorpay');
 
 const SocketMessage = require("./Schema/socketmessage");
 const AddLandDetails = require("./Schema/addland");
@@ -379,6 +378,7 @@ app.get("/logout", (req, res) => {
   res.json({ message: "Logout successful" });
 });
 
+<<<<<<< HEAD
 // Create Job API
 app.post('/api/jobs', async (req, res) => {
   try {

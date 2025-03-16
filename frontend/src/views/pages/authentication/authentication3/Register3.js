@@ -8,7 +8,6 @@ import { Divider, Grid, Stack, Typography, useMediaQuery } from '@mui/material';
 import AuthWrapper1 from '../AuthWrapper1';
 import AuthCardWrapper from '../AuthCardWrapper';
 import AuthRegister from '../auth-forms/AuthRegister';
-import FAQChatbot from '../../../../layout/Customization/FAQ-Bot';
 
 // assets
 
@@ -62,7 +61,6 @@ const Register = () => {
         </Grid>
        
       </Grid>
-      <FAQChatbot></FAQChatbot>
     </AuthWrapper1>
   );
 };
